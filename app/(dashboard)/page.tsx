@@ -15,13 +15,13 @@ async function getDashboardData() {
   ]);
 
   // Convert Decimals to numbers
-  const accounts = accountsRaw.map(a => ({
+  const accounts = accountsRaw.map((a) => ({
     ...a,
     currentBalance: Number(a.currentBalance),
     availableBalance: Number(a.availableBalance),
   }));
 
-  const transactions = transactionsRaw.map(t => ({
+  const transactions = transactionsRaw.map((t) => ({
     ...t,
     amount: Number(t.amount),
   }));
