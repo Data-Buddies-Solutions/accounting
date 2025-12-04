@@ -1,15 +1,113 @@
-// This is your Prisma schema file,
+// This is your Prisma schema file
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model MercuryConnection {
+  id            String    @id @default(cuid())
+  accessToken   String
+  refreshToken  String?
+  expiresAt     DateTime?
+  accountId     String
+  status        String    @default("active")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String        @id @default(cuid())
+  mercuryAccountId  String        @unique
+  name              String
+  type              String
+  status            String
+  currentBalance    Decimal       @db.Decimal(15, 2)
+  availableBalance  Decimal       @db.Decimal(15, 2)
+  currency          String        @default("USD")
+  lastSyncedAt      DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  transactions      Transaction[]
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  name         String
+  type         String
+  parentId     String?
+  parent       Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children     Category[]    @relation("CategoryHierarchy")
+  color        String?
+  icon         String?
+  isSystem     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+
+  @@unique([name, type])
+}
+
+model Transaction {
+  id                   String    @id @default(cuid())
+  mercuryTransactionId String?   @unique
+  accountId            String
+  account              Account   @relation(fields: [accountId], references: [id])
+  date                 DateTime
+  amount               Decimal   @db.Decimal(15, 2)
+  description          String
+  counterpartyName     String?
+  status               String
+  type                 String
+  source               String    @default("mercury")
+  isManualEntry        Boolean   @default(false)
+  paymentMethod        String?
+  categoryId           String?
+  category             Category? @relation(fields: [categoryId], references: [id])
+  categoryConfidence   Float?
+  categorySource       String?
+  notes                String?
+  needsReimbursement   Boolean   @default(false)
+  reimbursedAt         DateTime?
+  reimbursementNotes   String?
+  rawData              Json?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([accountId, date])
+  @@index([categoryId])
+  @@index([date])
+  @@index([isManualEntry])
+  @@index([needsReimbursement])
+}
+
+model CategorizationRule {
+  id         String   @id @default(cuid())
+  name       String
+  pattern    String
+  matchField String   @default("description")
+  categoryId String
+  priority   Int      @default(0)
+  isActive   Boolean  @default(true)
+  matchCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, priority])
+}
+
+model SyncLog {
+  id             String    @id @default(cuid())
+  syncType       String
+  status         String
+  itemsProcessed Int       @default(0)
+  itemsFailed    Int       @default(0)
+  errorMessage   String?
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
 }
