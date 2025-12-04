@@ -39,9 +39,10 @@ async function getTransactions(searchParams: any) {
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: any;
+  searchParams: Promise<any>;
 }) {
-  const transactions = await getTransactions(searchParams);
+  const params = await searchParams;
+  const transactions = await getTransactions(params);
 
   return (
     <div className="space-y-6">
@@ -57,22 +58,22 @@ export default async function TransactionsPage({
       {/* Filters */}
       <div className="flex gap-2">
         <Link href="/transactions">
-          <Button variant={!searchParams.uncategorized && !searchParams.source ? 'default' : 'outline'}>
+          <Button variant={!params.uncategorized && !params.source ? 'default' : 'outline'}>
             All
           </Button>
         </Link>
         <Link href="/transactions?uncategorized=true">
-          <Button variant={searchParams.uncategorized === 'true' ? 'default' : 'outline'}>
+          <Button variant={params.uncategorized === 'true' ? 'default' : 'outline'}>
             Uncategorized
           </Button>
         </Link>
         <Link href="/transactions?source=manual">
-          <Button variant={searchParams.source === 'manual' ? 'default' : 'outline'}>
+          <Button variant={params.source === 'manual' ? 'default' : 'outline'}>
             Manual Entries
           </Button>
         </Link>
         <Link href="/transactions?source=mercury">
-          <Button variant={searchParams.source === 'mercury' ? 'default' : 'outline'}>
+          <Button variant={params.source === 'mercury' ? 'default' : 'outline'}>
             Mercury
           </Button>
         </Link>
@@ -82,11 +83,11 @@ export default async function TransactionsPage({
       <Card>
         <CardHeader>
           <CardTitle>
-            {searchParams.uncategorized === 'true'
+            {params.uncategorized === 'true'
               ? 'Uncategorized Transactions'
-              : searchParams.source === 'manual'
+              : params.source === 'manual'
               ? 'Manual Entries'
-              : searchParams.source === 'mercury'
+              : params.source === 'mercury'
               ? 'Mercury Transactions'
               : 'All Transactions'}
           </CardTitle>
