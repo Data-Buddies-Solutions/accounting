@@ -3,6 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CategoryEditor } from '@/components/category-editor';
 
+type CategoryWithCount = {
+  id: string;
+  name: string;
+  type: string;
+  parentId: string | null;
+  color: string | null;
+  icon: string | null;
+  isSystem: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: {
+    transactions: number;
+  };
+};
+
 async function getCategories() {
   const categories = await prisma.category.findMany({
     orderBy: [{ type: 'asc' }, { name: 'asc' }],
@@ -19,8 +34,8 @@ async function getCategories() {
 export default async function CategoriesPage() {
   const categories = await getCategories();
 
-  const incomeCategories = categories.filter((c) => c.type === 'income');
-  const expenseCategories = categories.filter((c) => c.type === 'expense');
+  const incomeCategories = categories.filter((c: CategoryWithCount) => c.type === 'income');
+  const expenseCategories = categories.filter((c: CategoryWithCount) => c.type === 'expense');
 
   return (
     <div className="space-y-6">
