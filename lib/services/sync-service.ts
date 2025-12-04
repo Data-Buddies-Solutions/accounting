@@ -133,7 +133,7 @@ export class SyncService {
       type: parseFloat(mercuryTx.amount) < 0 ? 'debit' : 'credit',
       source: 'mercury' as const,
       isManualEntry: false,
-      rawData: mercuryTx,
+      rawData: mercuryTx as any,
     };
 
     return prisma.transaction.upsert({

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 export async function GET() {
   try {
@@ -7,7 +8,7 @@ export async function GET() {
     const transactions = await prisma.transaction.findMany({
       where: {
         source: 'mercury',
-        rawData: { not: null }
+        rawData: { not: Prisma.DbNull }
       },
       orderBy: { date: 'desc' },
       take: 10,

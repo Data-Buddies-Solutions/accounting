@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -301,7 +302,7 @@ export default function ReportsPage() {
                     });
 
                     // Render parents with their children
-                    const rows: JSX.Element[] = [];
+                    const rows: ReactElement[] = [];
 
                     // First, render standalone parent categories
                     parentKeys.forEach(parentKey => {
@@ -463,7 +464,7 @@ export default function ReportsPage() {
                             childEntriesMap[parent].push([key, amount]);
                           });
 
-                          const rows: JSX.Element[] = [];
+                          const rows: ReactElement[] = [];
 
                           // First, render standalone parent categories
                           parentEntries.forEach(([parentKey, amount]) => {

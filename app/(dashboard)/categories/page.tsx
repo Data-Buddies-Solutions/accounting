@@ -51,7 +51,7 @@ export default async function CategoriesPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3">
-            {incomeCategories.filter((c: CategoryWithCount) => !c.parentId).map((category) => (
+            {incomeCategories.filter((c: CategoryWithCount) => !c.parentId).map((category: CategoryWithCount) => (
               <div key={category.id}>
                 <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                   <div className="flex items-center gap-3">
@@ -77,7 +77,7 @@ export default async function CategoriesPage() {
                   </div>
                 </div>
                 {/* Subcategories */}
-                {incomeCategories.filter((c: CategoryWithCount) => c.parentId === category.id).map((subcat) => (
+                {incomeCategories.filter((c: CategoryWithCount) => c.parentId === category.id).map((subcat: CategoryWithCount) => (
                   <div key={subcat.id} className="flex items-center justify-between p-3 border-l-2 ml-8 mt-2 rounded-r-lg hover:bg-gray-50">
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{subcat.icon}</span>
@@ -106,7 +106,7 @@ export default async function CategoriesPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3">
-            {expenseCategories.filter((c: CategoryWithCount) => !c.parentId).map((category) => (
+            {expenseCategories.filter((c: CategoryWithCount) => !c.parentId).map((category: CategoryWithCount) => (
               <div key={category.id}>
                 <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                   <div className="flex items-center gap-3">
@@ -132,7 +132,7 @@ export default async function CategoriesPage() {
                   </div>
                 </div>
                 {/* Subcategories */}
-                {expenseCategories.filter((c: CategoryWithCount) => c.parentId === category.id).map((subcat) => (
+                {expenseCategories.filter((c: CategoryWithCount) => c.parentId === category.id).map((subcat: CategoryWithCount) => (
                   <div key={subcat.id} className="flex items-center justify-between p-3 border-l-2 ml-8 mt-2 rounded-r-lg hover:bg-gray-50">
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{subcat.icon}</span>
