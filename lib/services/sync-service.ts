@@ -3,7 +3,7 @@ import { createMercuryClient } from '../mercury/client';
 import type { MercuryTransaction, MercuryAccount } from '../mercury/types';
 
 export class SyncService {
-  private mercury Client;
+  private mercuryClient;
 
   constructor() {
     this.mercuryClient = createMercuryClient();
