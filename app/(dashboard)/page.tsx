@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import type { Account, Transaction, Category } from '@prisma/client';
 
 async function getDashboardData() {
   const [accountsRaw, transactionsRaw, categories] = await Promise.all([
@@ -15,13 +16,13 @@ async function getDashboardData() {
   ]);
 
   // Convert Decimals to numbers
-  const accounts = accountsRaw.map((a) => ({
+  const accounts = accountsRaw.map((a: Account) => ({
     ...a,
     currentBalance: Number(a.currentBalance),
     availableBalance: Number(a.availableBalance),
   }));
 
-  const transactions = transactionsRaw.map((t) => ({
+  const transactions = transactionsRaw.map((t: Transaction & { category: Category | null }) => ({
     ...t,
     amount: Number(t.amount),
   }));
