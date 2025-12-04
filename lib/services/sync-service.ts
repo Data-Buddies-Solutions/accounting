@@ -73,8 +73,18 @@ export class SyncService {
         if (!account) continue;
 
         try {
-          // Get last sync date or fetch last 90 days
-          const lastSyncDate = account.lastSyncedAt || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+          // Check if we have any transactions for this account
+          const existingTxCount = await prisma.transaction.count({
+            where: { accountId: account.id }
+          });
+
+          // If no transactions exist, fetch last 90 days, otherwise fetch from last sync
+          const lastSyncDate = existingTxCount > 0 && account.lastSyncedAt
+            ? account.lastSyncedAt
+            : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+          console.log(`Fetching transactions for account ${account.name} (${account.mercuryAccountId})`);
+          console.log(`  Start date: ${lastSyncDate.toISOString()} (${existingTxCount} existing transactions)`);
 
           const { transactions } = await this.mercuryClient.getTransactions(
             account.mercuryAccountId,
@@ -84,6 +94,7 @@ export class SyncService {
             }
           );
 
+          console.log(`  Found ${transactions.length} transactions`);
           total += transactions.length;
 
           for (const tx of transactions) {

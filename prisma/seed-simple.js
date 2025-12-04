@@ -22,6 +22,7 @@ async function main() {
     { name: 'Legal & Accounting', type: 'expense', isSystem: false, color: '#f59e0b', icon: '⚖️' },
     { name: 'Insurance', type: 'expense', isSystem: false, color: '#f59e0b', icon: '🛡️' },
     { name: 'Taxes', type: 'expense', isSystem: false, color: '#f59e0b', icon: '📊' },
+    { name: 'Payroll', type: 'expense', isSystem: false, color: '#8b5cf6', icon: '👥' },
     { name: 'Uncategorized', type: 'expense', isSystem: true, color: '#6b7280', icon: '❓' },
   ];
 

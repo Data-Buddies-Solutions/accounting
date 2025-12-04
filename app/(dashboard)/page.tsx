@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 async function getDashboardData() {
-  const [accounts, transactions, categories] = await Promise.all([
+  const [accountsRaw, transactionsRaw, categories] = await Promise.all([
     prisma.account.findMany(),
     prisma.transaction.findMany({
       include: { category: true },
@@ -14,24 +14,115 @@ async function getDashboardData() {
     prisma.category.findMany(),
   ]);
 
+  // Convert Decimals to numbers
+  const accounts = accountsRaw.map(a => ({
+    ...a,
+    currentBalance: Number(a.currentBalance),
+    availableBalance: Number(a.availableBalance),
+  }));
+
+  const transactions = transactionsRaw.map(t => ({
+    ...t,
+    amount: Number(t.amount),
+  }));
+
   // Calculate metrics
-  const currentMonth = new Date();
-  currentMonth.setDate(1);
-  currentMonth.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  const yearStart = new Date(now.getFullYear(), 0, 1);
 
-  const monthlyTransactions = await prisma.transaction.findMany({
-    where: {
-      date: { gte: currentMonth },
-    },
-  });
+  const [currentMonthTxs, lastMonthTxs, ytdTxs] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        date: { gte: currentMonthStart },
+      },
+      include: {
+        category: {
+          include: { parent: true },
+        },
+      },
+    }),
+    prisma.transaction.findMany({
+      where: {
+        date: { gte: lastMonthStart, lte: lastMonthEnd },
+      },
+      include: {
+        category: {
+          include: { parent: true },
+        },
+      },
+    }),
+    prisma.transaction.findMany({
+      where: {
+        date: { gte: yearStart },
+      },
+      include: {
+        category: {
+          include: { parent: true },
+        },
+      },
+    }),
+  ]);
 
-  const income = monthlyTransactions
+  // Filter out Internal Transfers
+  const filterTransfers = (txs: any[]) =>
+    txs.filter(tx =>
+      tx.category?.name !== 'Internal Transfers' &&
+      tx.category?.parent?.name !== 'Internal Transfers'
+    );
+
+  const currentFiltered = filterTransfers(currentMonthTxs);
+  const lastFiltered = filterTransfers(lastMonthTxs);
+  const ytdFiltered = filterTransfers(ytdTxs);
+
+  const currentIncome = currentFiltered
     .filter((t) => t.type === 'credit')
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  const expenses = monthlyTransactions
+  const currentExpenses = currentFiltered
     .filter((t) => t.type === 'debit')
     .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const lastIncome = lastFiltered
+    .filter((t) => t.type === 'credit')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const lastExpenses = lastFiltered
+    .filter((t) => t.type === 'debit')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const ytdIncome = ytdFiltered
+    .filter((t) => t.type === 'credit')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  // Owner Payout - find Payroll category
+  const lastMonthPayroll = lastFiltered
+    .filter((t) => t.type === 'debit' && t.category?.name === 'Payroll')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const ytdPayroll = ytdFiltered
+    .filter((t) => t.type === 'debit' && t.category?.name === 'Payroll')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  // Calculate expenses excluding payroll for profit margin
+  const lastExpensesExclPayroll = lastFiltered
+    .filter((t) => t.type === 'debit' && t.category?.name !== 'Payroll')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const ytdExpensesExclPayroll = ytdFiltered
+    .filter((t) => t.type === 'debit' && t.category?.name !== 'Payroll')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  // Profit margin = (Income - Operating Expenses) / Income * 100
+  const lastProfitMargin = lastIncome > 0
+    ? ((lastIncome - lastExpensesExclPayroll) / lastIncome) * 100
+    : 0;
+
+  const ytdProfitMargin = ytdIncome > 0
+    ? ((ytdIncome - ytdExpensesExclPayroll) / ytdIncome) * 100
+    : 0;
 
   const balance = accounts
     .filter((a) => a.type !== 'virtual')
@@ -41,8 +132,15 @@ async function getDashboardData() {
 
   return {
     balance,
-    income,
-    expenses,
+    currentIncome,
+    currentExpenses,
+    lastIncome,
+    lastExpenses,
+    ytdIncome,
+    lastMonthPayroll,
+    ytdPayroll,
+    lastProfitMargin,
+    ytdProfitMargin,
     uncategorized,
     transactions,
     accounts,
@@ -82,37 +180,43 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month Income</CardTitle>
+            <CardTitle className="text-sm font-medium">Income (Year to Date)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              +${data.income.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ${data.ytdIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-xs text-gray-500">Month to date</p>
+            <p className="text-xs text-gray-500">
+              Last month: ${data.lastIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">Owner Payout (Year to Date)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              -${data.expenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            <div className="text-2xl font-bold text-green-600">
+              ${(data.ytdPayroll / 2).toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-xs text-gray-500">Month to date</p>
+            <p className="text-xs text-gray-500">
+              Last month: ${(data.lastMonthPayroll / 2).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+            <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${data.income - data.expenses >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${(data.income - data.expenses).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            <div className={`text-2xl font-bold ${data.ytdProfitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {data.ytdProfitMargin.toFixed(1)}%
             </div>
-            <p className="text-xs text-gray-500">Income - Expenses</p>
+            <p className="text-xs text-gray-500">
+              Last month: {data.lastProfitMargin.toFixed(1)}%
+            </p>
           </CardContent>
         </Card>
       </div>

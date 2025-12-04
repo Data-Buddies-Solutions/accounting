@@ -28,10 +28,10 @@ export default function DashboardLayout({
                   Transactions
                 </Link>
                 <Link
-                  href="/transactions/new"
+                  href="/reports"
                   className="text-sm font-medium text-gray-700 hover:text-[#e96934]"
                 >
-                  Add Transaction
+                  Reports
                 </Link>
                 <Link
                   href="/categories"

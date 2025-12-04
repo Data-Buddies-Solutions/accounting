@@ -11,6 +11,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { TransactionCategoryEditor } from '@/components/transaction-category-editor';
+import { TransactionVendorEditor } from '@/components/transaction-vendor-editor';
+import { TransactionEditor } from '@/components/transaction-editor';
 
 async function getTransactions(searchParams: any) {
   const where: any = {};
@@ -33,7 +36,16 @@ async function getTransactions(searchParams: any) {
     take: 100,
   });
 
-  return transactions;
+  // Convert Decimal to number for client components
+  return transactions.map(tx => ({
+    ...tx,
+    amount: Number(tx.amount),
+    account: {
+      ...tx.account,
+      currentBalance: Number(tx.account.currentBalance),
+      availableBalance: Number(tx.account.availableBalance),
+    },
+  }));
 }
 
 export default async function TransactionsPage({
@@ -106,6 +118,7 @@ export default async function TransactionsPage({
                   <TableHead>Category</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -116,20 +129,17 @@ export default async function TransactionsPage({
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{tx.description}</div>
-                      {tx.counterpartyName && (
-                        <div className="text-sm text-gray-500">
-                          {tx.counterpartyName}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        {tx.counterpartyName && !tx.vendor && (
+                          <div className="text-sm text-gray-500">
+                            {tx.counterpartyName}
+                          </div>
+                        )}
+                        <TransactionVendorEditor transaction={tx} />
+                      </div>
                     </TableCell>
                     <TableCell>
-                      {tx.category ? (
-                        <Badge variant="secondary">
-                          {tx.category.icon} {tx.category.name}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Uncategorized</Badge>
-                      )}
+                      <TransactionCategoryEditor transaction={tx} />
                     </TableCell>
                     <TableCell>
                       <Badge variant={tx.source === 'manual' ? 'default' : 'secondary'}>
@@ -154,6 +164,9 @@ export default async function TransactionsPage({
                           minimumFractionDigits: 2,
                         })}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      <TransactionEditor transaction={tx} />
                     </TableCell>
                   </TableRow>
                 ))}

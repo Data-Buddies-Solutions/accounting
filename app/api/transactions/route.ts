@@ -68,6 +68,7 @@ export async function POST(request: Request) {
         date: new Date(body.date),
         amount: parseFloat(body.amount),
         description: body.description,
+        vendor: body.vendor,
         type: body.type,
         source: 'manual',
         isManualEntry: true,

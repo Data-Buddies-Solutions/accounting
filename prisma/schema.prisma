@@ -62,6 +62,7 @@ model Transaction {
   amount               Decimal   @db.Decimal(15, 2)
   description          String
   counterpartyName     String?
+  vendor               String?
   status               String
   type                 String
   source               String    @default("mercury")
@@ -84,6 +85,7 @@ model Transaction {
   @@index([date])
   @@index([isManualEntry])
   @@index([needsReimbursement])
+  @@index([vendor])
 }
 
 model CategorizationRule {
