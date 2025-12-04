@@ -1,6 +1,6 @@
 import { prisma } from '../prisma';
 import { createMercuryClient } from '../mercury/client';
-import type { MercuryTransaction, MercuryAccount } from '../mercury/types';
+import type { MercuryTransaction } from '../mercury/types';
 
 export class SyncService {
   private mercuryClient;
@@ -133,7 +133,7 @@ export class SyncService {
       type: parseFloat(mercuryTx.amount) < 0 ? 'debit' : 'credit',
       source: 'mercury' as const,
       isManualEntry: false,
-      rawData: mercuryTx as any,
+      rawData: JSON.parse(JSON.stringify(mercuryTx)),
     };
 
     return prisma.transaction.upsert({

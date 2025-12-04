@@ -1,0 +1,4 @@
+# Utility scripts and seed files
+check-db.js
+test-prisma.js
+prisma/seed-simple.js

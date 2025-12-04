@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 export async function PATCH(
   request: Request,
@@ -9,7 +10,7 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    const updateData: any = {};
+    const updateData: Prisma.TransactionUncheckedUpdateInput = {};
 
     if (body.categoryId !== undefined) updateData.categoryId = body.categoryId;
     if (body.notes !== undefined) updateData.notes = body.notes;

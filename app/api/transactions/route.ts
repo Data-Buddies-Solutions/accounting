@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 export async function GET(request: Request) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     const endDate = searchParams.get('endDate');
     const source = searchParams.get('source');
 
-    const where: any = {};
+    const where: Prisma.TransactionWhereInput = {};
 
     if (categoryId) where.categoryId = categoryId;
     if (source) where.source = source;

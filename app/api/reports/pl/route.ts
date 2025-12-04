@@ -33,7 +33,14 @@ export async function GET(request: Request) {
     });
 
     // Group by month and category
-    const monthlyData: Record<string, any> = {};
+    interface MonthlyData {
+      income: Record<string, number>;
+      expenses: Record<string, number>;
+      totalIncome: number;
+      totalExpenses: number;
+      netProfit?: number;
+    }
+    const monthlyData: Record<string, MonthlyData> = {};
 
     transactions.forEach((tx) => {
       // Skip Internal Transfers - they don't belong in P&L

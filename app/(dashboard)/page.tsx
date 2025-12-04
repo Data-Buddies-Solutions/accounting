@@ -5,14 +5,13 @@ import Link from 'next/link';
 import type { Account, Transaction, Category } from '@prisma/client';
 
 async function getDashboardData() {
-  const [accountsRaw, transactionsRaw, categories] = await Promise.all([
+  const [accountsRaw, transactionsRaw] = await Promise.all([
     prisma.account.findMany(),
     prisma.transaction.findMany({
       include: { category: true },
       orderBy: { date: 'desc' },
       take: 10,
     }),
-    prisma.category.findMany(),
   ]);
 
   // Convert Decimals to numbers
@@ -68,8 +67,12 @@ async function getDashboardData() {
   ]);
 
   // Filter out Internal Transfers
-  const filterTransfers = (txs: any[]) =>
-    txs.filter(tx =>
+  type TransactionWithCategory = Transaction & {
+    category: (Category & { parent: Category | null }) | null;
+  };
+
+  const filterTransfers = (txs: TransactionWithCategory[]) =>
+    txs.filter((tx: TransactionWithCategory) =>
       tx.category?.name !== 'Internal Transfers' &&
       tx.category?.parent?.name !== 'Internal Transfers'
     );
@@ -253,7 +256,7 @@ export default async function DashboardPage() {
         <CardContent>
           {data.transactions.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No transactions yet. Click "Sync Mercury" to fetch your transactions.
+              No transactions yet. Click &quot;Sync Mercury&quot; to fetch your transactions.
             </div>
           ) : (
             <div className="space-y-2">

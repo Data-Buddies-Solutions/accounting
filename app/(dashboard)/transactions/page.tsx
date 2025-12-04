@@ -14,9 +14,10 @@ import { Button } from '@/components/ui/button';
 import { TransactionCategoryEditor } from '@/components/transaction-category-editor';
 import { TransactionVendorEditor } from '@/components/transaction-vendor-editor';
 import { TransactionEditor } from '@/components/transaction-editor';
+import type { Prisma } from '@prisma/client';
 
-async function getTransactions(searchParams: any) {
-  const where: any = {};
+async function getTransactions(searchParams: Record<string, string | undefined>) {
+  const where: Prisma.TransactionWhereInput = {};
 
   if (searchParams.uncategorized === 'true') {
     where.categoryId = null;
@@ -51,7 +52,7 @@ async function getTransactions(searchParams: any) {
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<any>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
   const transactions = await getTransactions(params);
